@@ -79,6 +79,10 @@ web_modules/
 .env.production.local
 .env.local
 
+# lock
+package-lock.json
+bun.lockb
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
