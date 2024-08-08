@@ -49,7 +49,6 @@ app.get('/callback', async (req, res) => {
 
     const token = await tokenRequest(refreshToken);
     if (!token) return res.redirect('/login');
-    console.log(token);
 
     const userData = await oauth.getUser(token.access_token);
 
@@ -94,7 +93,6 @@ app.post('/save', authMiddleware, async (req, res) => {
 
     //In the future add validation for the settings object
     const settings = req.body;
-    console.log(settings);
     if (!settings) return res.status(400).json({ error: 'Bad Request' });
 
     await Settings.updateOne({ userId: user.userId }, { settings }, { upsert: true });
