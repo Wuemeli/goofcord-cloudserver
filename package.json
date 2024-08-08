@@ -1,0 +1,22 @@
+{
+  "name": "goofcord-cloudserver",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun .",
+    "dev": "bun --watch ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "discord-oauth2": "^2.12.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.5.2"
+  }
+}
