@@ -62,7 +62,7 @@ app.get('/callback', async (req, res) => {
         await User.create({ userId, authToken });
     }
 
-    res.redirect(`http://localhost:9999/${authToken}`);
+    res.redirect(`http://localhost:9998/${authToken}`);
 });
 
 app.get('/delete', authMiddleware, async (req, res) => {
