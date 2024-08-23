@@ -8,6 +8,9 @@ import { User } from './schemas/usersSchema';
 import { Settings } from './schemas/settingsSchema';
 import { tokenRequest } from './functions';
 
+const UNAUTHORIZED_ERROR = 'Unauthorized. Please authenticate again';
+const INTERNAL_SERVER_ERROR = 'Internal Server Error';
+
 dotenv.config();
 
 mongoose.connect(process.env.MONGO_URI).then(() => {
@@ -22,10 +25,10 @@ app.use(express.json());
 
 async function authMiddleware(req, res, next) {
     const authToken = req.headers.authorization;
-    if (!authToken) return res.status(401).json({ error: 'Unauthorized' });
+    if (!authToken) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
     const user = await User.findOne({ authToken });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
     req.user = user;
     next();
@@ -68,7 +71,7 @@ app.get('/callback', async (req, res) => {
 app.get('/delete', authMiddleware, async (req, res) => {
     try {
         const user = await User.findOne({ authToken: req.headers.authorization });
-        if (!user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
         await User.deleteOne({ userId: user.userId });
         await Settings.deleteOne({ userId: user.userId });
@@ -76,14 +79,14 @@ app.get('/delete', authMiddleware, async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
     }
 });
 
 app.get('/load', authMiddleware, async (req, res) => {
     try {
         const user = await User.findOne({ authToken: req.headers.authorization });
-        if (!user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
         const settingsraw = await Settings.findOne({ userId: user.userId });
         if (!settingsraw) return res.json({ settings: "" });
@@ -91,14 +94,14 @@ app.get('/load', authMiddleware, async (req, res) => {
         res.json({ settings: settingsraw.settings });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
     }
 });
 
 app.post('/save', authMiddleware, async (req, res) => {
     try {
         const user = await User.findOne({ authToken: req.headers.authorization });
-        if (!user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
         const settings = req.body.settings;
         if (typeof settings !== 'string') return res.status(400).json({ error: 'Bad Request' });
@@ -108,7 +111,7 @@ app.post('/save', authMiddleware, async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
     }
 });
 
