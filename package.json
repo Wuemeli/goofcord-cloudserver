@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "bun .",
-    "dev": "bun --watch ."
+    "dev": "bun --watch .",
+    "dockerMongo": "docker stop mongos && docker rm mongos && docker run --name mongos -p 27017:27017 -d mongo:7.0.14-rc0-jammy"
   },
   "devDependencies": {
     "@types/bun": "latest"
