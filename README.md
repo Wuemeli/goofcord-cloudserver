@@ -11,8 +11,7 @@ This Project is under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE](LICENSE)
 Dont remove any Credits from the Footer.
 
 ## 📜 Contributing
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any
-To start look at the [Contributing.md](CONTRIBUTING.md) File.
+Just.. Do.. It.. 
 
 ## 🪶 Features
 - [x] Sync your Settings with the Cloud

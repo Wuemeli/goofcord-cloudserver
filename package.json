@@ -4,16 +4,16 @@
   "type": "module",
   "scripts": {
     "start": "bun .",
-    "dev": "bun --watch ."
+    "dev": "bun --watch .",
+    "dockerMongo": "docker stop mongos && docker rm mongos && docker run --name mongos -p 27017:27017 -d mongo:7.0.14-rc0-jammy"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
-    "crypto": "^1.0.1",
     "discord-oauth2": "^2.12.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

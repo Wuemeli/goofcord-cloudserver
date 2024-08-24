@@ -2,11 +2,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import DiscordOauth2 from 'discord-oauth2';
 import dotenv from 'dotenv';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 import { User } from './schemas/usersSchema';
 import { Settings } from './schemas/settingsSchema';
 import { tokenRequest } from './functions';
+
+const UNAUTHORIZED_ERROR = 'Unauthorized. Please authenticate again';
+const INTERNAL_SERVER_ERROR = 'Internal Server Error';
 
 dotenv.config();
 
@@ -22,10 +25,10 @@ app.use(express.json());
 
 async function authMiddleware(req, res, next) {
     const authToken = req.headers.authorization;
-    if (!authToken) return res.status(401).json({ error: 'Unauthorized' });
+    if (!authToken) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
     const user = await User.findOne({ authToken });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
     req.user = user;
     next();
@@ -62,42 +65,54 @@ app.get('/callback', async (req, res) => {
         await User.create({ userId, authToken });
     }
 
-    res.redirect(`http://localhost:9999/${authToken}`);
+    res.redirect(`http://localhost:9998/${authToken}`);
 });
 
 app.get('/delete', authMiddleware, async (req, res) => {
-    const user = await User.findOne({ authToken: req.headers.authorization });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = await User.findOne({ authToken: req.headers.authorization });
+        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
-    await User.deleteOne({ userId: user.userId });
-    await Settings.deleteOne({ userId: user.userId });
+        await User.deleteOne({ userId: user.userId });
+        await Settings.deleteOne({ userId: user.userId });
 
-    res.json({ success: true });
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
+    }
 });
 
 app.get('/load', authMiddleware, async (req, res) => {
-    const user = await User.findOne({ authToken: req.headers.authorization });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = await User.findOne({ authToken: req.headers.authorization });
+        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
-    const settingsraw = await Settings.findOne({ userId: user.userId });
-    if (!settingsraw) return res.json({ settings: {} });
+        const settingsraw = await Settings.findOne({ userId: user.userId });
+        if (!settingsraw) return res.json({ settings: "" });
 
-    const settings = JSON.parse(JSON.stringify(settingsraw.settings));
-
-    res.json({ settings: settings });
+        res.json({ settings: settingsraw.settings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
+    }
 });
 
 app.post('/save', authMiddleware, async (req, res) => {
-    const user = await User.findOne({ authToken: req.headers.authorization });
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    try {
+        const user = await User.findOne({ authToken: req.headers.authorization });
+        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
 
-    //In the future add validation for the settings object
-    const settings = req.body;
-    if (!settings) return res.status(400).json({ error: 'Bad Request' });
+        const settings = req.body.settings;
+        if (typeof settings !== 'string') return res.status(400).json({ error: 'Bad Request' });
 
-    await Settings.updateOne({ userId: user.userId }, { settings }, { upsert: true });
+        await Settings.updateOne({ userId: user.userId }, { settings }, { upsert: true });
 
-    res.json({ success: true });
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
+    }
 });
 
 app.get('/ping', (req, res) => {
@@ -105,7 +120,6 @@ app.get('/ping', (req, res) => {
 });
 
 const port = process.env.PORT || 3000;
-
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
