@@ -1,122 +1,35 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import DiscordOauth2 from 'discord-oauth2';
-import dotenv from 'dotenv';
-import crypto from 'node:crypto';
+import {getEnvVarStrict} from "./utils";
+import * as path from "node:path";
+import * as fs from "node:fs/promises";
 
-import { User } from './schemas/usersSchema';
-import { Settings } from './schemas/settingsSchema';
-import { tokenRequest } from './functions';
-
-const UNAUTHORIZED_ERROR = 'Unauthorized. Please authenticate again';
-const INTERNAL_SERVER_ERROR = 'Internal Server Error';
-
-dotenv.config();
-
-mongoose.connect(process.env.MONGO_URI).then(() => {
-    console.log('Connected to MongoDB');
-}).catch((err) => {
-    console.error(err);
-});
+await mongoose.connect(getEnvVarStrict('MONGO_URI')).catch(console.error);
+console.log('Connected to MongoDB');
 
 const app = express();
-
 app.use(express.json());
 
-async function authMiddleware(req, res, next) {
-    const authToken = req.headers.authorization;
-    if (!authToken) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
-
-    const user = await User.findOne({ authToken });
-    if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
-
-    req.user = user;
-    next();
+const routesDirectory = path.join(import.meta.dir, 'routes'); // Get absolute path to routes folder
+// Dynamically load all routes in the "routes" directory
+async function loadRoutes() {
+    try {
+        const files = await fs.readdir(routesDirectory);
+        for (const file of files) {
+            if (file.endsWith('.ts')) {
+                const { default: router } = await import(path.join(routesDirectory, file));
+                const version = path.basename(file, '.ts'); // Extract version (e.g. v1)
+                app.use(`/${version}`, router);
+            }
+        }
+    } catch (err) {
+        console.error('Error loading routes:', err);
+    }
 }
+await loadRoutes();
 
-export const oauth = new DiscordOauth2({
-    clientId: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    redirectUri: process.env.REDIRECT_URI,
-});
-
-app.get('/login', (req, res) => {
-    res.redirect(oauth.generateAuthUrl({
-        scope: ['identify'],
-    }));
-});
-
-app.get('/callback', async (req, res) => {
-    const refreshToken = req.query.code;
-    if (!refreshToken) return res.redirect('/login');
-
-    const token = await tokenRequest(refreshToken);
-    if (!token) return res.redirect('/login');
-
-    const userData = await oauth.getUser(token.access_token);
-
-    const userId = userData.id;
-
-    const check = await User.findOne({ userId });
-    const authToken = crypto.randomBytes(16).toString('hex');
-    if (check) {
-        await User.updateOne({ userId }, { authToken });
-    } else {
-        await User.create({ userId, authToken });
-    }
-
-    res.redirect(`http://localhost:9998/${authToken}`);
-});
-
-app.get('/delete', authMiddleware, async (req, res) => {
-    try {
-        const user = await User.findOne({ authToken: req.headers.authorization });
-        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
-
-        await User.deleteOne({ userId: user.userId });
-        await Settings.deleteOne({ userId: user.userId });
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
-    }
-});
-
-app.get('/load', authMiddleware, async (req, res) => {
-    try {
-        const user = await User.findOne({ authToken: req.headers.authorization });
-        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
-
-        const settingsraw = await Settings.findOne({ userId: user.userId });
-        if (!settingsraw) return res.json({ settings: "" });
-
-        res.json({ settings: settingsraw.settings });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
-    }
-});
-
-app.post('/save', authMiddleware, async (req, res) => {
-    try {
-        const user = await User.findOne({ authToken: req.headers.authorization });
-        if (!user) return res.status(401).json({ error: UNAUTHORIZED_ERROR });
-
-        const settings = req.body.settings;
-        if (typeof settings !== 'string') return res.status(400).json({ error: 'Bad Request' });
-
-        await Settings.updateOne({ userId: user.userId }, { settings }, { upsert: true });
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: INTERNAL_SERVER_ERROR });
-    }
-});
-
-app.get('/ping', (req, res) => {
-    res.status(200).json({ success: true });
+app.get('/', (_req, res) => {
+    res.redirect("https://github.com/Wuemeli/goofcord-cloudserver");
 });
 
 const port = process.env.PORT || 3000;
