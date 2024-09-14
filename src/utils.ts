@@ -1,6 +1,10 @@
 import * as path from "path";
 import DiscordOauth2 from "discord-oauth2";
 
+export function getUrlWithoutSlash(url: string): string {
+    return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+}
+
 export function getEnvVarStrict(name: string): string {
     const value = process.env[name];
     if (!value) {

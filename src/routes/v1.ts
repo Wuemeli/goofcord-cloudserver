@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { User } from '../schemas/usersSchema';
 import { Settings } from '../schemas/settingsSchema';
 import DiscordOauth2 from "discord-oauth2";
-import { getEnvVarStrict, getPathFileName, tokenRequest } from "../utils";
+import { getEnvVarStrict, getPathFileName, getUrlWithoutSlash, tokenRequest } from "../utils";
 import { Context, Hono, Next } from "hono";
 
 const VERSION = '/' + getPathFileName(import.meta.url);
@@ -12,7 +12,7 @@ const INTERNAL_SERVER_ERROR = 'Internal Server Error';
 const oauth = new DiscordOauth2({
     clientId: getEnvVarStrict('CLIENT_ID'),
     clientSecret: getEnvVarStrict('CLIENT_SECRET'),
-    redirectUri: getEnvVarStrict('REDIRECT_URI') + VERSION + '/callback',
+    redirectUri: getUrlWithoutSlash(getEnvVarStrict('REDIRECT_URI')) + VERSION + '/callback',
 }); const authURL = oauth.generateAuthUrl({scope: ['identify']});
 
 const app = new Hono<{ Variables: { user: User } }>();
