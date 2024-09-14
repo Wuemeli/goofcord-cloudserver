@@ -1,5 +1,8 @@
-import express from 'express';
+import { Hono } from "hono";
 
-const v2Router = express.Router();
+const app = new Hono();
+export default app;
 
-export default v2Router;
+app.get('/', (c) => {
+    return c.text('Test');
+});

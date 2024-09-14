@@ -1,14 +1,13 @@
-import express from 'express';
 import mongoose from 'mongoose';
 import {getEnvVarStrict} from "./utils";
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
+import { Hono } from "hono";
 
 await mongoose.connect(getEnvVarStrict('MONGO_URI')).catch(console.error);
 console.log('Connected to MongoDB');
 
-const app = express();
-app.use(express.json());
+export const app = new Hono();
 
 const routesDirectory = path.join(import.meta.dir, 'routes'); // Get absolute path to routes folder
 // Dynamically load all routes in the "routes" directory
@@ -17,9 +16,9 @@ async function loadRoutes() {
         const files = await fs.readdir(routesDirectory);
         for (const file of files) {
             if (file.endsWith('.ts')) {
-                const { default: router } = await import(path.join(routesDirectory, file));
-                const version = path.basename(file, '.ts'); // Extract version (e.g. v1)
-                app.use(`/${version}`, router);
+                const { default: route } = await import(path.join(routesDirectory, file));
+                const version = path.basename(file, '.ts');
+                app.route('/'+version, route);
             }
         }
     } catch (err) {
@@ -28,11 +27,14 @@ async function loadRoutes() {
 }
 await loadRoutes();
 
-app.get('/', (_req, res) => {
-    res.redirect("https://github.com/Wuemeli/goofcord-cloudserver");
-});
+app.get('/', (c) => {
+    return c.redirect("https://github.com/Wuemeli/goofcord-cloudserver");
+})
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+const port = parseInt(process.env.PORT!) || 3000
+console.log(`Running at http://localhost:${port}`)
+
+export default {
+    port,
+    fetch: app.fetch,
+}
