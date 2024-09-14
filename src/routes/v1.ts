@@ -74,17 +74,14 @@ app.get('/delete', authMiddleware, async (c) => {
     }
 });
 
-function login(c: Context) {
-    return c.redirect(authURL);
-}
-app.get('/login', async (c) => login(c));
+app.get('/login', async (c) => c.redirect(authURL));
 
 app.get('/callback', async (c) => {
     const refreshToken = c.req.query('code');
-    if (!refreshToken) return login(c);
+    if (!refreshToken) return c.json({ error: "OAuth2 code not found" }, 400);
 
     const token = await tokenRequest(refreshToken, oauth);
-    if (!token) return login(c);
+    if (!token) return c.json({ error: "Failed to obtain token. Is the OAuth2 code correct?" }, 400);
 
     const userData = await oauth.getUser(token.access_token);
     const userId = userData.id;
@@ -97,7 +94,11 @@ app.get('/callback', async (c) => {
         await User.create({ userId, authToken });
     }
 
-    return c.redirect(`http://localhost:9998/${authToken}`);
+    return c.json({ token: authToken });
+});
+
+app.get('/clientid', (c) => {
+    return c.body(getEnvVarStrict('CLIENT_ID'));
 });
 
 app.get('/ping', (c) => {
