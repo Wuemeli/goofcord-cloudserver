@@ -2,25 +2,17 @@
 > Sync your GoofCord Settings with the Cloud. <br>
 
 ## 📦 Built With
-- [Bun.sh](https://bun.sh) - The Runtime used
-- [Express](https://expressjs.com) - The Web Framework used
-- [MongoDB](https://mongodb.com) - The Database used
+- [Bun.sh](https://bun.sh) - Runtime
+- [Hono](https://hono.dev/) - Web Framework
+- [MongoDB](https://mongodb.com) - Database
 
 ## 📰 License
 This Project is under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE](LICENSE) file for more info.
-Dont remove any Credits from the Footer.
-
-## 📜 Contributing
-Just.. Do.. It.. 
-
-## 🪶 Features
-- [x] Sync your Settings with the Cloud
-- [x] Get your Settings from the Cloud
-- [x] Delete your Settings from the Cloud
 
 ## ⭐ Starhistory
-[![Star History Chart](https://api.star-history.com/svg?repos=Wuemeli/goofcord-cloudserver&type=Date)](https://star-history.com/#Wuemeli/goofcord-cloudserve&Date)
+<a href="https://star-history.com/#Wuemeli/goofcord-cloudserver&Date"><img src="https://api.star-history.com/svg?repos=Wuemeli/goofcord-cloudserver&type=Stars" width="500"></a>
 
 ## 📫 Contact
-If you want to contact me you can reach me at Discord: wuemeli
+GoofCord's [Discord Server](https://discord.gg/CZc4bpnjmm)    
+Direct Messages: `wuemeli` or `milkshift`
 
